@@ -85,7 +85,7 @@ func (s *Server) CreateCompany(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusCreated, map[string]uuid.UUID{"id": id})
+	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
 // Updatecompany updates  company by id
@@ -110,5 +110,5 @@ func (s *Server) UpdateCompany(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusCreated, map[string]uuid.UUID{"id": id})
+	c.JSON(http.StatusCreated, gin.H{"id": id})
 }

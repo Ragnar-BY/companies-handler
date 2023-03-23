@@ -21,6 +21,7 @@ linters-settings:
       - ifElseChain
       - octalLiteral
       - whyNoLint
+      - unnecessaryBlock
   gocyclo:
     min-complexity: 15
   goimports:
