@@ -9,10 +9,10 @@ import (
 
 // Config is config struct
 type Config struct {
-	PostgreSQLAddr     string `env:"POSTGRESQL_ADDRESS"`
-	PostgreSQLUser     string `env:"POSTGRESQL_USER"`
-	PostgreSQLPassword string `env:"POSTGRESQL_PASSWORD"`
-	PostgreSQLDatabase string `env:"POSTGRESQL_DATABASE"`
+	PostgresAddress  string `env:"POSTGRES_ADDRESS"`
+	PostgresUser     string `env:"POSTGRES_USER"`
+	PostgresPassword string `env:"POSTGRES_PASSWORD"`
+	PostgresDB       string `env:"POSTGRES_DB"`
 
 	ServerAddress string `env:"SERVER_ADDRESS"`
 

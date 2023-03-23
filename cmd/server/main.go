@@ -21,12 +21,13 @@ func main() {
 		logger.Fatal("can not load config", zap.Error(err))
 	}
 
-	dbClient, err := postgres.NewPostgresClient(postgres.PostgresSettings{
-		Addr:     cfg.PostgreSQLAddr,
-		Username: cfg.PostgreSQLUser,
-		Password: cfg.PostgreSQLPassword,
-		Database: cfg.PostgreSQLDatabase,
-	})
+	pgSettings := postgres.PostgresSettings{
+		Addr:     cfg.PostgresAddress,
+		Username: cfg.PostgresUser,
+		Password: cfg.PostgresPassword,
+		Database: cfg.PostgresDB,
+	}
+	dbClient, err := postgres.NewPostgresClient(pgSettings)
 	if err != nil {
 		logger.Fatal("can not connect to database", zap.Error(err))
 	}
