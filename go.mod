@@ -3,12 +3,14 @@ module github.com/Ragnar-BY/companies-handler
 go 1.20
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.9.0
 	github.com/google/uuid v1.3.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/jmoiron/sqlx v1.3.5
 	go.uber.org/zap v1.24.0
+	golang.org/x/crypto v0.6.0
 )
 
 require (
@@ -36,7 +38,6 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect

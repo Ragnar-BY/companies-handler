@@ -33,11 +33,29 @@ func (s *Server) RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 	}
 
-	us, err := s.users.CreateUser(c.Request.Context(), newUser)
+	token, err := s.auth.SignUp(c.Request.Context(), newUser)
 	if err != nil {
 		s.log.Error("can not create new user", zap.Error(err))
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusCreated, us)
+	c.JSON(http.StatusCreated, gin.H{"token": token})
+}
+
+// SignIn sign in user
+func (s *Server) SignIn(c *gin.Context) {
+	var u user
+	err := c.ShouldBind(&u)
+	if err != nil {
+		s.log.Error("can not bind user", zap.Error(err))
+		c.JSON(http.StatusBadRequest, err)
+	}
+
+	token, err := s.auth.SignIn(c.Request.Context(), u.Email, u.Password)
+	if err != nil {
+		s.log.Error("can not sign in", zap.Error(err))
+		c.JSON(http.StatusUnauthorized, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }

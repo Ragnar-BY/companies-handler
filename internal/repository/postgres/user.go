@@ -46,3 +46,13 @@ func (c *PostgresClient) CreateUser(ctx context.Context, u domain.User) (*domain
 	domainUser := newUser.userToDomain()
 	return &domainUser, err
 }
+
+func (c *PostgresClient) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var u user
+	err := c.db.GetContext(ctx, &u, "SELECT * FROM users WHERE email=$1", email)
+	if err != nil {
+		return nil, err
+	}
+	domainUser := u.userToDomain()
+	return &domainUser, nil
+}

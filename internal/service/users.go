@@ -9,6 +9,7 @@ import (
 // UserRepository describes user repository
 type UserRepository interface {
 	CreateUser(ctx context.Context, u domain.User) (*domain.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 }
 
 type UserService struct {
@@ -22,4 +23,8 @@ func NewUserService(repo UserRepository) *UserService {
 // CreateUser creates new user
 func (s *UserService) CreateUser(ctx context.Context, u domain.User) (*domain.User, error) {
 	return s.repo.CreateUser(ctx, u)
+}
+
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+	return s.repo.GetUserByEmail(ctx, email)
 }

@@ -34,8 +34,9 @@ func main() {
 	companyUsecase := usecase.NewCompanyUsecase(companySrv)
 
 	userSrv := service.NewUserService(dbClient)
-	userUsecase := usecase.NewUserUsecase(userSrv)
-	srv := rest.NewServer(cfg.ServerAddress, logger, companyUsecase, userUsecase)
+	authSrv := service.NewAuthService([]byte(cfg.JWTKey))
+	authUsecase := usecase.NewAuthUsecase(authSrv, userSrv)
+	srv := rest.NewServer(cfg.ServerAddress, logger, companyUsecase, authUsecase)
 
 	go func() {
 		err = srv.Run()

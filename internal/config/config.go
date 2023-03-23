@@ -15,6 +15,8 @@ type Config struct {
 	PostgreSQLDatabase string `env:"POSTGRESQL_DATABASE"`
 
 	ServerAddress string `env:"SERVER_ADDRESS"`
+
+	JWTKey string `env:"JWT_KEY"`
 }
 
 // LoadConfig loads config from .env file

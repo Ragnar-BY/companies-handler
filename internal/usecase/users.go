@@ -9,6 +9,7 @@ import (
 // UserService describes user service
 type UserService interface {
 	CreateUser(ctx context.Context, u domain.User) (*domain.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 }
 
 // UserUsecase is user usecase
