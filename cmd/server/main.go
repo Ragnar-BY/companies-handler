@@ -32,7 +32,10 @@ func main() {
 	}
 	companySrv := service.NewCompanyService(dbClient)
 	companyUsecase := usecase.NewCompanyUsecase(companySrv)
-	srv := rest.NewServer(cfg.ServerAddress, logger, companyUsecase)
+
+	userSrv := service.NewUserService(dbClient)
+	userUsecase := usecase.NewUserUsecase(userSrv)
+	srv := rest.NewServer(cfg.ServerAddress, logger, companyUsecase, userUsecase)
 
 	go func() {
 		err = srv.Run()

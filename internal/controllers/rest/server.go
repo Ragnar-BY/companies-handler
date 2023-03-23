@@ -19,15 +19,20 @@ type CompaniesUsecase interface {
 	Update(ctx context.Context, uuid uuid.UUID, company domain.Company) error
 }
 
+type UsersUsecase interface {
+	CreateUser(ctx context.Context, user domain.User) (*domain.User, error)
+}
+
 type Server struct {
 	srv *http.Server
 	log *zap.Logger
 
 	companies CompaniesUsecase
+	users     UsersUsecase
 }
 
 // NewServer creates new server instance
-func NewServer(addr string, log *zap.Logger, companies CompaniesUsecase) *Server {
+func NewServer(addr string, log *zap.Logger, companies CompaniesUsecase, users UsersUsecase) *Server {
 	e := gin.Default()
 
 	srv := &http.Server{
@@ -39,6 +44,7 @@ func NewServer(addr string, log *zap.Logger, companies CompaniesUsecase) *Server
 		srv:       srv,
 		log:       log,
 		companies: companies,
+		users:     users,
 	}
 	s.routes(e)
 	return &s
@@ -60,6 +66,8 @@ func (s *Server) routes(e *gin.Engine) {
 			oneCompany.DELETE("/", s.DeleteCompany)
 		}
 	}
+
+	e.POST("/users", s.RegisterUser)
 }
 
 // Run starts server
