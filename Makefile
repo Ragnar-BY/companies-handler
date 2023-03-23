@@ -8,3 +8,6 @@ run:
 
 lint:
 	golangci-lint run
+
+docker-up:
+	docker-compose up

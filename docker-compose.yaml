@@ -1,0 +1,67 @@
+version: '3.9'
+
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+       - postgres-db:/var/lib/postgresql/data/pgdata
+    networks:
+      - local
+
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - local
+    volumes:
+      - ./postgres/migrations:/migrations
+    command:
+      [ "-database",
+        "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable",
+        "-path", "/migrations", "up" ]
+
+
+  app:
+    healthcheck:
+      test: wget --spider http://localhost:8080/healtz
+      interval: 10m
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - local
+    build:
+      dockerfile: Dockerfile
+    command:
+      - "-log=/logs/log.txt"
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      - POSTGRES_ADDRESS=postgres:5432
+
+networks:
+  local:
+    driver: bridge
+
+volumes:
+  postgres-db:
+    driver: local
