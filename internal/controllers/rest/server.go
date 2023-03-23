@@ -64,13 +64,13 @@ func (s *Server) routes(e *gin.Engine) {
 	companies := e.Group("/companies")
 	{
 		companies.GET("/", s.SelectCompanies)
-		companies.POST("/", s.CreateCompany)
+		companies.POST("/", s.CreateCompany).Use(s.Auth())
 
 		oneCompany := companies.Group("/:id")
 		{
 			oneCompany.GET("/", s.GetCompany)
-			oneCompany.PATCH("/", s.UpdateCompany)
-			oneCompany.DELETE("/", s.DeleteCompany)
+			oneCompany.PATCH("/", s.UpdateCompany).Use(s.Auth())
+			oneCompany.DELETE("/", s.DeleteCompany).Use(s.Auth())
 		}
 	}
 
