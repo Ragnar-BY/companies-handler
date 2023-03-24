@@ -28,7 +28,7 @@ func (s *Server) GetCompany(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, company)
+	c.JSON(http.StatusOK, domainToCompany(company))
 }
 
 // SelectCompanies selects list of company according query params limit and offset
@@ -50,7 +50,11 @@ func (s *Server) SelectCompanies(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, companies)
+	result := make([]company, 0)
+	for _, c := range companies {
+		result = append(result, domainToCompany(c))
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 // DeleteCompany deletes company by id from path param

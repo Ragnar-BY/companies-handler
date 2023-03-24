@@ -24,3 +24,14 @@ func companyToDomain(c company) domain.Company {
 		Type:              domain.CompanyType(c.Type),
 	}
 }
+
+func domainToCompany(c domain.Company) company {
+	return company{
+		ID:                c.ID,
+		Name:              c.Name,
+		Description:       c.Description,
+		AmountOfEmployees: c.AmountOfEmployees,
+		Registered:        c.Registered,
+		Type:              string(c.Type),
+	}
+}
