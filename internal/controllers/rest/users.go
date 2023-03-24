@@ -9,9 +9,9 @@ import (
 )
 
 type user struct {
-	Username string
-	Email    string
-	Password string
+	Username string `validate:"required,min=4"`
+	Email    string `validate:"required,email"`
+	Password string `validate:"required,min=8"`
 }
 
 // RegisterUser saves user with hash password
@@ -20,7 +20,15 @@ func (s *Server) RegisterUser(c *gin.Context) {
 	err := c.ShouldBind(&u)
 	if err != nil {
 		s.log.Error("can not bind user", zap.Error(err))
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = validate.Struct(&u)
+	if err != nil {
+		s.log.Error("can not validate user", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	newUser := domain.User{
@@ -31,6 +39,7 @@ func (s *Server) RegisterUser(c *gin.Context) {
 	if err != nil {
 		s.log.Error("can not hash user password", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	token, err := s.auth.SignUp(c.Request.Context(), newUser)
@@ -49,6 +58,7 @@ func (s *Server) SignIn(c *gin.Context) {
 	if err != nil {
 		s.log.Error("can not bind user", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	token, err := s.auth.SignIn(c.Request.Context(), u.Email, u.Password)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Ragnar-BY/companies-handler/internal/domain"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -30,6 +31,10 @@ type AuthUsecase interface {
 	ValidateToken(signedToken string) error
 }
 
+// use a single instance of Validate, it caches struct info
+var validate = validator.New()
+
+// Server is REST API server
 type Server struct {
 	srv *http.Server
 	log *zap.Logger

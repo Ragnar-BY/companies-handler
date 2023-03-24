@@ -26,6 +26,7 @@ func (s *Server) GetCompany(c *gin.Context) {
 	if err != nil {
 		s.log.Error("can not get company", zap.Error(err))
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, company)
 }
@@ -77,6 +78,13 @@ func (s *Server) CreateCompany(c *gin.Context) {
 	if err != nil {
 		s.log.Error("can not bind company", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = validate.Struct(cmp)
+	if err != nil {
+		s.log.Error("can not validate company", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	newCompany := companyToDomain(cmp)
 	id, err := s.companies.Create(c.Request.Context(), newCompany)
@@ -95,11 +103,18 @@ func (s *Server) UpdateCompany(c *gin.Context) {
 	if err != nil {
 		s.log.Error("can not bind company", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	paramID := c.Param("id")
 	id, err := uuid.Parse(paramID)
 	if err != nil {
 		s.log.Error("can not parse id", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = validate.Struct(cmp)
+	if err != nil {
+		s.log.Error("can not validate company", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
