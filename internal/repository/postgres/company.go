@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Ragnar-BY/companies-handler/internal/domain"
@@ -51,7 +52,10 @@ func (c *PostgresClient) CreateCompany(ctx context.Context, company domain.Compa
 		return uuid.Nil, err
 	}
 	err = stmt.GetContext(ctx, &id, cmp)
-	return id, err
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("can not create company: %w", err)
+	}
+	return id, nil
 }
 
 // GetCompany gets company from DB by id
@@ -59,7 +63,7 @@ func (c *PostgresClient) GetCompany(ctx context.Context, id uuid.UUID) (domain.C
 	var cmp company
 	err := c.db.GetContext(ctx, &cmp, "SELECT * FROM companies WHERE id=$1", id)
 	if err != nil {
-		return domain.Company{}, err
+		return domain.Company{}, fmt.Errorf("can not get company: %w", err)
 	}
 	return toDomain(cmp), nil
 }
@@ -69,7 +73,7 @@ func (c *PostgresClient) SelectCompanies(ctx context.Context, limit, offset int)
 	var cmps []company
 	err := c.db.SelectContext(ctx, &cmps, "SELECT * FROM companies LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can not select companies: %w", err)
 	}
 	companies := make([]domain.Company, 0)
 	for _, cmp := range cmps {
@@ -81,7 +85,10 @@ func (c *PostgresClient) SelectCompanies(ctx context.Context, limit, offset int)
 // DeleteCompany deletes company from DB by id
 func (c *PostgresClient) DeleteCompany(ctx context.Context, id uuid.UUID) error {
 	_, err := c.db.ExecContext(ctx, "DELETE FROM companies WHERE id=$1", id)
-	return err
+	if err != nil {
+		return fmt.Errorf("can not delete company: %w", err)
+	}
+	return nil
 }
 
 // UpdateCompany updates company by id
@@ -93,5 +100,8 @@ func (c *PostgresClient) UpdateCompany(ctx context.Context, id uuid.UUID, compan
 		`UPDATE companies SET name=:name, description=:description, amount_of_employees=:amount_of_employees, 
 		registered=:registered,type=:type, updated_at=:updated_at
 		 WHERE id=:id`, cmp)
-	return err
+	if err != nil {
+		return fmt.Errorf("can not update company: %w", err)
+	}
+	return nil
 }

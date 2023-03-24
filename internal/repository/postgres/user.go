@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Ragnar-BY/companies-handler/internal/domain"
@@ -44,14 +45,17 @@ func (c *PostgresClient) CreateUser(ctx context.Context, u domain.User) (*domain
 	var newUser user
 	err = stmt.GetContext(ctx, &newUser, createUser)
 	domainUser := newUser.userToDomain()
-	return &domainUser, err
+	if err != nil {
+		return nil, fmt.Errorf("can not create user: %w", err)
+	}
+	return &domainUser, nil
 }
 
 func (c *PostgresClient) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var u user
 	err := c.db.GetContext(ctx, &u, "SELECT * FROM users WHERE email=$1", email)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can not get user by email: %w", err)
 	}
 	domainUser := u.userToDomain()
 	return &domainUser, nil
