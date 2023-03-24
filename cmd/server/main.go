@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Ragnar-BY/companies-handler/internal/broker"
 	"github.com/Ragnar-BY/companies-handler/internal/config"
 	"github.com/Ragnar-BY/companies-handler/internal/controllers/rest"
 	"github.com/Ragnar-BY/companies-handler/internal/repository/postgres"
@@ -31,8 +32,11 @@ func main() {
 	if err != nil {
 		logger.Fatal("can not connect to database", zap.Error(err))
 	}
+	msgBroker := broker.NewBroker()
+	eventSrv := service.NewEventSender(msgBroker)
+
 	companySrv := service.NewCompanyService(dbClient)
-	companyUsecase := usecase.NewCompanyUsecase(companySrv)
+	companyUsecase := usecase.NewCompanyUsecase(companySrv, eventSrv)
 
 	userSrv := service.NewUserService(dbClient)
 	authSrv := service.NewAuthService([]byte(cfg.JWTKey))

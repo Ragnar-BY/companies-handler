@@ -7,6 +7,12 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	createCompanyTopic = "create-company"
+	updateCompanyTopic = "update-company"
+	deleteCompanyTopic = "delete-company"
+)
+
 // CompanyService describes interface for company service
 type CompanyService interface {
 	Create(ctx context.Context, company domain.Company) (uuid.UUID, error)
@@ -16,19 +22,30 @@ type CompanyService interface {
 	Update(ctx context.Context, uuid uuid.UUID, company domain.Company) error
 }
 
+// EventService describe service for sending events in message broker
+type EventService interface {
+	SendEvent(topic string, message any) error
+}
+
 // CompanyUsecase is usecase for companies
 type CompanyUsecase struct {
-	srv CompanyService
+	srv    CompanyService
+	events EventService
 }
 
 // NewCompanyUsecase creates new company usecase
-func NewCompanyUsecase(companies CompanyService) *CompanyUsecase {
-	return &CompanyUsecase{srv: companies}
+func NewCompanyUsecase(companies CompanyService, events EventService) *CompanyUsecase {
+	return &CompanyUsecase{srv: companies, events: events}
 }
 
 // Create creates new company
 func (u *CompanyUsecase) Create(ctx context.Context, company domain.Company) (uuid.UUID, error) {
-	return u.srv.Create(ctx, company)
+	id, err := u.srv.Create(ctx, company)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	err = u.events.SendEvent(createCompanyTopic, id)
+	return id, err
 }
 
 // Get gets new company
@@ -43,10 +60,20 @@ func (u *CompanyUsecase) Select(ctx context.Context, limit, offset int) ([]domai
 
 // Delete deletes company
 func (u *CompanyUsecase) Delete(ctx context.Context, id uuid.UUID) error {
-	return u.srv.Delete(ctx, id)
+	err := u.srv.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	return u.events.SendEvent(deleteCompanyTopic, id)
 }
 
 // Update updates company
 func (u *CompanyUsecase) Update(ctx context.Context, id uuid.UUID, company domain.Company) error {
-	return u.srv.Update(ctx, id, company)
+	company.ID = id
+	err := u.srv.Update(ctx, id, company)
+
+	if err != nil {
+		return err
+	}
+	return u.events.SendEvent(updateCompanyTopic, company)
 }
