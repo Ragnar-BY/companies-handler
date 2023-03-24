@@ -61,21 +61,23 @@ func NewServer(addr string, log *zap.Logger, companies CompaniesUsecase, auth Au
 func (s *Server) routes(e *gin.Engine) {
 	e.GET("/healtz", s.Healtz)
 
-	companies := e.Group("/companies")
-	{
-		companies.GET("/", s.SelectCompanies)
-		companies.POST("/", s.CreateCompany).Use(s.Auth())
-
-		oneCompany := companies.Group("/:id")
-		{
-			oneCompany.GET("/", s.GetCompany)
-			oneCompany.PATCH("/", s.UpdateCompany).Use(s.Auth())
-			oneCompany.DELETE("/", s.DeleteCompany).Use(s.Auth())
-		}
-	}
-
+	// users
 	e.POST("/register", s.RegisterUser)
 	e.POST("/signin", s.SignIn)
+
+	public := e.Group("/")
+	{
+		public.GET("/companies", s.SelectCompanies)
+		public.GET("/companies/:id", s.GetCompany)
+	}
+
+	private := e.Group("/").Use(s.Auth())
+	{
+		private.POST("/companies", s.CreateCompany)
+
+		private.PATCH("/companies/:id", s.UpdateCompany)
+		private.DELETE("/companies/:id", s.DeleteCompany)
+	}
 }
 
 // Run starts server
