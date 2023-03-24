@@ -84,7 +84,8 @@ func (s *e2eTestSuite) SetupSuite() {
 func (s *e2eTestSuite) TearDownSuite() {
 	p, err := os.FindProcess(syscall.Getpid())
 	s.Require().NoError(err)
-	p.Signal(syscall.SIGINT)
+	err = p.Signal(syscall.SIGINT)
+	s.Require().NoError(err)
 }
 
 func (s *e2eTestSuite) SetupTest() {
@@ -107,8 +108,8 @@ func (s *e2eTestSuite) Test_EndToEnd_GetCompany() {
 	}
 	ctx := context.Background()
 
-	id, err := s.dbClient.CreateCompany(ctx, company)
-	s.Require().NoError(err)
+	id, err2 := s.dbClient.CreateCompany(ctx, company)
+	s.Require().NoError(err2)
 
 	testCases := []struct {
 		name         string
@@ -150,7 +151,7 @@ func (s *e2eTestSuite) Test_EndToEnd_GetCompany() {
 		})
 	}
 
-	err = s.dbClient.DeleteCompany(ctx, id)
+	err := s.dbClient.DeleteCompany(ctx, id)
 	s.NoError(err)
 }
 
@@ -228,15 +229,16 @@ func (s *e2eTestSuite) Test_EndToEnd_CreateCompany() {
 	s.NoError(err)
 	UserReq.Header.Set("Content-Type", "application/json")
 	client := http.Client{}
-	response, err := client.Do(UserReq)
+	userResponse, err := client.Do(UserReq)
 	s.NoError(err)
-	s.Equal(http.StatusCreated, response.StatusCode)
+	s.Equal(http.StatusCreated, userResponse.StatusCode)
 
 	token := struct {
 		Token string
 	}{}
-	err = json.NewDecoder(response.Body).Decode(&token)
+	err = json.NewDecoder(userResponse.Body).Decode(&token)
 	s.NoError(err)
+	userResponse.Body.Close()
 
 	testCases := []struct {
 		name          string
@@ -275,9 +277,9 @@ func (s *e2eTestSuite) Test_EndToEnd_CreateCompany() {
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tt.token))
 
-			response, err = client.Do(req)
+			response, err := client.Do(req)
 			s.NoError(err)
-			defer response.Body.Close()
+
 			s.Require().Equal(tt.statusCode, response.StatusCode)
 
 			if tt.companyCreate {
@@ -298,6 +300,81 @@ func (s *e2eTestSuite) Test_EndToEnd_CreateCompany() {
 			}
 
 			response.Body.Close()
+		})
+	}
+}
+
+func (s *e2eTestSuite) Test_EndToEnd_DeleteCompany() {
+	ctx := context.Background()
+
+	company := domain.Company{
+		Name:              "test-company",
+		Description:       "some description",
+		AmountOfEmployees: 123,
+		Registered:        true,
+		Type:              domain.Corporations,
+	}
+
+	id, err2 := s.dbClient.CreateCompany(ctx, company)
+	s.Require().NoError(err2)
+
+	userBody := `{
+		"username":"test user",
+		"email": "test@test.com",
+		"password": "12345678"
+	}`
+	UserReq, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("http://%s/register", s.srvAddr), strings.NewReader(userBody))
+	s.NoError(err)
+	UserReq.Header.Set("Content-Type", "application/json")
+	client := http.Client{}
+	userResponse, err := client.Do(UserReq)
+	s.NoError(err)
+	s.Equal(http.StatusCreated, userResponse.StatusCode)
+
+	token := struct {
+		Token string
+	}{}
+	err = json.NewDecoder(userResponse.Body).Decode(&token)
+	s.NoError(err)
+	userResponse.Body.Close()
+
+	testCases := []struct {
+		name       string
+		statusCode int
+		token      string
+		id         uuid.UUID
+	}{
+		{
+			name:       "valid test",
+			statusCode: http.StatusOK,
+			token:      token.Token,
+			id:         id,
+		},
+		{
+			name:       "unauthorized",
+			statusCode: http.StatusUnauthorized,
+			token:      "",
+		},
+	}
+
+	for _, tt := range testCases {
+		s.Run(tt.name, func() {
+			req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("http://%s/companies/%v", s.srvAddr, tt.id), http.NoBody)
+			s.NoError(err)
+
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tt.token))
+
+			response, err := client.Do(req)
+			s.NoError(err)
+
+			s.Require().Equal(tt.statusCode, response.StatusCode)
+			if tt.statusCode == http.StatusOK {
+				response.Body.Close()
+
+				_, err = s.dbClient.GetCompany(ctx, id)
+				s.Equal("can not get company: sql: no rows in result set", err.Error())
+			}
 		})
 	}
 }
