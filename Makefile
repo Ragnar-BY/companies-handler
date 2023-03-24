@@ -11,3 +11,6 @@ lint:
 
 docker-up:
 	docker-compose up
+
+integration:
+	go test -tags=integration ./internal/integration -v -count=1 -p=1

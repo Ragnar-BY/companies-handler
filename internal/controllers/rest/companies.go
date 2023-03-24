@@ -36,12 +36,12 @@ func (s *Server) SelectCompanies(c *gin.Context) {
 	limitQuery, offsetQuery := c.Query("limit"), c.Query("offset")
 	limit, err := strconv.Atoi(limitQuery)
 	if err != nil {
-		s.log.Error("can not parse limit", zap.Error(err))
+		s.log.Warn("can not parse limit", zap.Error(err))
 		limit = defaultLimit
 	}
 	offset, err := strconv.Atoi(offsetQuery)
 	if err != nil {
-		s.log.Error("can not parse offset", zap.Error(err))
+		s.log.Warn("can not parse offset", zap.Error(err))
 		offset = 0
 	}
 	companies, err := s.companies.Select(c.Request.Context(), limit, offset)
